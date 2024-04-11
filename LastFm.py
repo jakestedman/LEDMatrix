@@ -1,14 +1,14 @@
+import time
 import pylast
-import threading
 import requests
 import shutil
 import os
+import asyncio
 
 
-class LastFm(threading.Thread):
-    def __init__(self, username, password, api_key, api_secret):
-        # initiate a session
-        super().__init__()
+class LastFm:
+    def __init__(self, username, password, api_key, api_secret, running=True):
+        # Initiate a session
         password_hash = pylast.md5(password)
         self.network = pylast.LastFMNetwork(api_key=api_key,
                                             api_secret=api_secret,
@@ -16,40 +16,49 @@ class LastFm(threading.Thread):
                                             password_hash=password_hash)
 
         self.username = self.network.get_user(username)
+        self.running = running
+        self.now_playing = None
+
+    async def get_now_playing_album_art(self, timeout):
+        # Ability to turn off get now playing
+        while self.running:
+            # Get now playing every timeout seconds
+            await asyncio.sleep(timeout)
+            new_track = self.get_now_playing()
+
+            # If a new song is playing, update current playing
+            if new_track != self.now_playing:
+                self.now_playing = new_track
+
+                # If nothing is playing skip album art get
+                if self.now_playing is None:
+                    continue
+
+                print(f"Now playing: {str(self.now_playing)}")
+                self.get_album_art(self.now_playing)
+
+                return 1
 
     def get_now_playing(self):
-        current_playing = None
-        new_track = self.username.get_now_playing()
+        track = self.username.get_now_playing()
 
-        # If a new song is playing, update current playing
-        if new_track != current_playing:
-            current_playing = new_track
+        return track
 
-            res = current_playing.split(" - ")
-            song = res[0]
-            artist = res[1]
-
-            print(f"Now playing: {current_playing}")
-
-            return song, artist
-
-    def get_album_art(self, song, artist):
-        print(f"Getting album art for song {song} - {artist}")
+    def get_album_art(self, track):
+        print(f"Getting album art for song {track.get_album()}")
         get_attempts = 0
         current_folder = os.getcwd()  # Get current folder to create image path later
 
-        album = self.network.get_album(artist, song)
-        image_url = album.get_cover_image(4)
-
+        image_url = track.get_cover_image(3)
         image_file_type = image_url[-4:]
         image = requests.get(image_url, stream=True)
 
         # If there's an error but less than 5 get attempts, try again
         if image.status_code != 200 and get_attempts < 5:
             print("There was an error downloading album art, trying again..")
-            self.get_album_art(song, artist)
-
             get_attempts += 1
+
+            self.get_album_art(track)
 
         elif image.status_code == 200:
             print("Album art succesfully downloaded!")
@@ -62,7 +71,13 @@ class LastFm(threading.Thread):
             return image_path  # Return image path so you can delete the file after use
 
         else:
-            print(f"Attempted get of artwork for album {album} failed. Exceeded five attempts.")
+            print(f"Attempted get of artwork for album {track.get_album} failed. Exceeded five attempts.")
+
+    def get_album(self, artist, song):
+        return self.network.get_album(artist, song)
+
+    def set_running(self, running):
+        self.running = running
 
     def check_connection(self):
         # check if connection to last fm is up
