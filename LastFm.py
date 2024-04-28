@@ -1,9 +1,9 @@
-import time
 import pylast
 import requests
 import shutil
 import os
 import asyncio
+from pathlib import Path
 
 
 class LastFm:
@@ -17,7 +17,8 @@ class LastFm:
 
         self.username = self.network.get_user(username)
         self.running = running
-        self.now_playing = None
+        self.current_playing = None
+        self.current_artwork = None
 
     async def get_now_playing_album_art(self, timeout):
         # Ability to turn off get now playing
@@ -27,17 +28,29 @@ class LastFm:
             new_track = self.get_now_playing()
 
             # If a new song is playing, update current playing
-            if new_track != self.now_playing:
-                self.now_playing = new_track
+            if new_track != self.current_playing:
+                self.current_playing = new_track
 
-                # If nothing is playing skip album art get
-                if self.now_playing is None:
+                # If nothing is playing skip getting album art
+                if self.current_playing is None:
                     continue
 
-                print(f"Now playing: {str(self.now_playing)}")
-                self.get_album_art(self.now_playing)
+                # Delete album art already saved
+                self.delete_album_art()
 
-                return 1
+                print(f"Now playing: {str(self.current_playing)}")
+
+                # Download new album art
+                self.current_artwork = self.get_album_art(self.current_playing)
+
+                return True
+
+    def delete_album_art(self):
+        files = os.listdir("app/LEDMatrix")
+
+        for file in files:
+            if Path(file).name == "temp_album":
+                os.remove(file)
 
     def get_now_playing(self):
         track = self.username.get_now_playing()
@@ -53,22 +66,24 @@ class LastFm:
         image_file_type = image_url[-4:]
         image = requests.get(image_url, stream=True)
 
-        # If there's an error but less than 5 get attempts, try again
-        if image.status_code != 200 and get_attempts < 5:
-            print("There was an error downloading album art, trying again..")
-            get_attempts += 1
-
-            self.get_album_art(track)
-
-        elif image.status_code == 200:
+        if image.status_code == 200:
             print("Album art succesfully downloaded!")
 
             with open(f"temp_album{image_file_type}", "wb") as temp_file:
                 shutil.copyfileobj(image.raw, temp_file)
 
+                temp_file.close()
+
             image_path = current_folder + f"/temp_album{image_file_type}"
 
             return image_path  # Return image path so you can delete the file after use
+
+        # If there's an error but less than 5 get attempts, try again
+        elif image.status_code != 200 and get_attempts < 5:
+            print("There was an error downloading album art, trying again..")
+            get_attempts += 1
+
+            self.get_album_art(track)
 
         else:
             print(f"Attempted get of artwork for album {track.get_album} failed. Exceeded five attempts.")
