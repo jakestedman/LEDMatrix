@@ -1,3 +1,5 @@
+TODO: dependencies
+
 To run:
 
 After setting up your pi according to the documents in https://github.com/hzeller/rpi-rgb-led-matrix
