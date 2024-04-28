@@ -1,5 +1,7 @@
 import asyncio
 import os
+import Config
+from rgbmatrix import RGBMatrix, RGBMatrixOptions
 from PIL import Image
 from LastFm import LastFm
 from dotenv import load_dotenv
@@ -13,7 +15,7 @@ async def run():
         new_song = await last_fm.get_now_playing_album_art(5)
 
         if new_song == True:
-            image = last_fm.current_artwork
+            image = Image.open(last_fm.current_artwork)
             # Make image fit our screen.
             image.thumbnail((matrix.width, matrix.height), Image.LANCZOS)
 

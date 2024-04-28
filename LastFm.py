@@ -46,7 +46,8 @@ class LastFm:
                 return True
 
     def delete_album_art(self):
-        files = os.listdir("app/LEDMatrix")
+        current_dir = os.getcwd()
+        files = os.listdir(current_dir)
 
         for file in files:
             if Path(file).name == "temp_album":
@@ -69,7 +70,7 @@ class LastFm:
         if image.status_code == 200:
             print("Album art succesfully downloaded!")
 
-            with open(f"temp_album{image_file_type}", "wb") as temp_file:
+            with open(f"{current_folder}/temp_album{image_file_type}", "wb") as temp_file:
                 shutil.copyfileobj(image.raw, temp_file)
 
                 temp_file.close()
