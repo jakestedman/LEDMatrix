@@ -19,11 +19,11 @@ LAST_FM_PASSWORD=your-password
 To launch on startup of Pi (with DietPi installed):
 
 1. Navigate to /lib/systemd/system
-2. Create a service file with "sudo nano <your-name>.service"
+2. Create a service file with "sudo nano your-name.service"
 3. Type in the following
    
     [Unit]
-    Description=<your-description>
+    Description=your-description
     After=local-fs.target network.target
     
     [Service]
@@ -35,7 +35,7 @@ To launch on startup of Pi (with DietPi installed):
     [Install]
     WantedBy=multi-user.target
 
-4. Give .service file 644 permissions with "chmod 644 <your-service-name>.service"
+4. Give .service file 644 permissions with "chmod 644 your-service-name.service"
 5. Restart daemon with "sudo systemctl daemon-reload"
-6. Enable service to launch when device boots with "sudo systemctl enable <your-service-name>.service"
-7. Start service with "sudo systemctl start <your-service-name>.service"
+6. Enable service to launch when device boots with "sudo systemctl enable your-service-name.service"
+7. Start service with "sudo systemctl start your-service-name.service"
