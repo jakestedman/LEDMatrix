@@ -23,7 +23,7 @@ async def run():
             image = Image.open(last_fm.current_artwork)
             # Make image fit our screen.
             image.thumbnail((matrix.width, matrix.height), Image.LANCZOS)
-
+            image = image.rotate(180)
             matrix.SetImage(image.convert('RGB'))
 
         # If not in music listening mode do not search for album art
