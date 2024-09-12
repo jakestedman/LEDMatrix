@@ -17,17 +17,28 @@ from dotenv import load_dotenv
 
 async def run():
     while True:
-        new_song = await last_fm.get_now_playing_album_art(5)
+        album_art_success = await last_fm.get_now_playing_album_art(5)
 
-        if new_song == True:
+        # If new album art has been downloaded, display it on the matrix
+        if album_art_success == True:
             image = Image.open(last_fm.current_artwork)
+            # TODO: Check image type and if it's a gif, play the gif
             # Make image fit our screen.
             image.thumbnail((matrix.width, matrix.height), Image.LANCZOS)
             image = image.rotate(180)
             matrix.SetImage(image.convert('RGB'))
 
-        # If not in music listening mode do not search for album art
+        # If new album art has not been downloaded, display placeholder
+        elif album_art_success == False:
+            # TODO: Add the backup image if the album art was unable to be found
+            #       could be just the name of the song, for now skip
+            continue
 
+        # If music has been stopped, clear matrix
+        # TODO: Switch to ambient image displaying mode with
+        #       pictures of renaissance paintings
+        elif album_art_success == None:
+            matrix.Clear()
 
 if __name__ == '__main__':
     # Load env variables

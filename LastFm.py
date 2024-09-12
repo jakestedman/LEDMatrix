@@ -3,10 +3,13 @@ import requests
 import shutil
 import os
 import asyncio
+import hashlib
 from pathlib import Path
-
+from PIL import Image
 
 class LastFm:
+    default_img_hash = "c903567bed54233fdd17377cdef3a344"
+
     def __init__(self, username, password, api_key, api_secret, running=True):
         # Initiate a session
         password_hash = pylast.md5(password)
@@ -31,17 +34,19 @@ class LastFm:
             if new_track != self.current_playing:
                 self.current_playing = new_track
 
-                # If nothing is playing skip getting album art
+                # If nothing is playing return None
                 if self.current_playing is None:
-                    continue
+                    return None
 
                 # Delete album art already saved
                 self.delete_album_art()
 
                 print(f"Now playing: {str(self.current_playing)}")
 
-                # Download new album art
+                # Download new album art, return False if not downloaded
                 self.current_artwork = self.get_album_art(self.current_playing)
+                if self.current_artwork == False:
+                    return False
 
                 return True
 
@@ -70,12 +75,20 @@ class LastFm:
         if image.status_code == 200:
             print("Album art succesfully downloaded!")
 
+            # Save file data to file
             with open(f"{current_folder}/temp_album{image_file_type}", "wb") as temp_file:
                 shutil.copyfileobj(image.raw, temp_file)
 
-                temp_file.close()
-
             image_path = current_folder + f"/temp_album{image_file_type}"
+
+            # If image is default last fm image, return false
+            with open(image_path, "rb") as saved_file:
+                md5_hash = hashlib.md5(saved_file.read()).hexdigest()
+
+            if md5_hash == LastFm.default_img_hash:
+                print(f"Album art for track doesn't exist.")
+
+                return False
 
             return image_path  # Return image path so you can delete the file after use
 
