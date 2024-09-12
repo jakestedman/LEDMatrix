@@ -27,7 +27,7 @@ To launch on startup of Pi (with DietPi installed):
     After=local-fs.target network.target
     
     [Service]
-    ExecStart=/path/to/your/python3 /path/to/App.py
+    ExecStart=/path/to/your/python3 /path/to/main.py
     WorkingDirectory=/path/to/your/working/directory
     User=root
     ReadWritePaths=/path/to/your/working/directory
