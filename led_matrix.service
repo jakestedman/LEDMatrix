@@ -1,0 +1,14 @@
+
+[Unit]
+Description=Service that runs the led matrix album cover viewer
+After=local-fs.target network.target
+
+[Service]
+ExecStart=sudo /usr/bin/python3 /app/led_matrix/App.py
+WorkingDirectory=/app/led_matrix
+User=root
+ReadWritePaths=/app/led_matrix
+
+[Install]
+WantedBy=multi-user.target
+

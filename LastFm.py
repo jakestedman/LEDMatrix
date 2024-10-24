@@ -29,7 +29,8 @@ class LastFm:
             # Get now playing every timeout seconds
             await asyncio.sleep(timeout)
             new_track = self.get_now_playing()
-
+            while new_track == False:
+                new_track = self.get_now_playing()
             # If a new song is playing, update current playing
             if new_track != self.current_playing:
                 self.current_playing = new_track
@@ -59,8 +60,10 @@ class LastFm:
                 os.remove(file)
 
     def get_now_playing(self):
-        track = self.username.get_now_playing()
-
+        try:
+            track = self.username.get_now_playing()
+        except: 
+            return False
         return track
 
     def get_album_art(self, track):
