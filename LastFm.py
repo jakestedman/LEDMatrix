@@ -2,6 +2,7 @@ import pylast
 import requests
 import shutil
 import os
+import logging
 import asyncio
 import hashlib
 from pathlib import Path
@@ -11,6 +12,8 @@ class LastFm:
     default_img_hash = "c903567bed54233fdd17377cdef3a344"
 
     def __init__(self, username, password, api_key, api_secret, running=True):
+        logging.info("Initialising LastFm...")
+
         # Initiate a session
         password_hash = pylast.md5(password)
         self.network = pylast.LastFMNetwork(api_key=api_key,
@@ -22,6 +25,8 @@ class LastFm:
         self.running = running
         self.current_playing = None
         self.current_artwork = None
+
+        logging.info("LastFm initialised!")
 
     async def get_now_playing_album_art(self, timeout):
         # Ability to turn off get now playing
@@ -42,7 +47,7 @@ class LastFm:
                 # Delete album art already saved
                 self.delete_album_art()
 
-                print(f"Now playing: {str(self.current_playing)}")
+                logging.info(f"Now playing: {str(self.current_playing)}")
 
                 # Download new album art, return False if not downloaded
                 self.current_artwork = self.get_album_art(self.current_playing)
@@ -67,7 +72,7 @@ class LastFm:
         return track
 
     def get_album_art(self, track):
-        print(f"Getting album art for song {track.get_album()}")
+        logging.info(f"Getting album art for song {track.get_album()}")
         get_attempts = 0
         current_folder = os.getcwd()  # Get current folder to create image path later
 
@@ -76,7 +81,7 @@ class LastFm:
         image = requests.get(image_url, stream=True)
 
         if image.status_code == 200:
-            print("Album art succesfully downloaded!")
+            logging.info("Album art succesfully downloaded!")
 
             # Save file data to file
             with open(f"{current_folder}/temp_album{image_file_type}", "wb") as temp_file:
@@ -89,7 +94,7 @@ class LastFm:
                 md5_hash = hashlib.md5(saved_file.read()).hexdigest()
 
             if md5_hash == LastFm.default_img_hash:
-                print(f"Album art for track doesn't exist.")
+                logging.info(f"Album art for track doesn't exist.")
 
                 return False
 
@@ -97,13 +102,13 @@ class LastFm:
 
         # If there's an error but less than 5 get attempts, try again
         elif image.status_code != 200 and get_attempts < 5:
-            print("There was an error downloading album art, trying again..")
+            logging.info("There was an error downloading album art, trying again..")
             get_attempts += 1
 
             self.get_album_art(track)
 
         else:
-            print(f"Attempted get of artwork for album {track.get_album} failed. Exceeded five attempts.")
+            logging.info(f"Attempted get of artwork for album {track.get_album} failed. Exceeded five attempts.")
 
     def get_album(self, artist, song):
         return self.network.get_album(artist, song)
