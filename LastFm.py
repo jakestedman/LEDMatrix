@@ -84,10 +84,10 @@ class LastFm:
             logging.info("Album art succesfully downloaded!")
 
             # Save file data to file
-            with open(f"{current_folder}/temp_album{image_file_type}", "wb") as temp_file:
+            with open(f"{current_folder}/assets/album_art/temp_album{image_file_type}", "wb") as temp_file:
                 shutil.copyfileobj(image.raw, temp_file)
 
-            image_path = current_folder + f"/temp_album{image_file_type}"
+            image_path = current_folder + f"/assets/album_art/temp_album{image_file_type}"
 
             # If image is default last fm image, return false
             with open(image_path, "rb") as saved_file:

@@ -19,7 +19,7 @@ from dotenv import load_dotenv
 async def run():
     logging.info("Running loop.")
     while True:
-        album_art_success = await last_fm.get_now_playing_album_art(5)
+        album_art_success = await last_fm.get_now_playing_album_art(Config.album_search_freq)
 
         # If new album art has been downloaded, display it on the matrix
         if album_art_success == True:
@@ -37,12 +37,18 @@ async def run():
             # TODO: Add the backup image if the album art was unable to be found
             #       could be just the name of the song, for now skip
             logging.info("Unable to find album art.")
+            image = Image.open("assets/doodle_man/picture-not-found-placeholder.jpg")
+            image.thumbnail((matrix.width, matrix.height), Image.LANCZOS)
+            image = image.rotate(180)
+            matrix.SetImage(image.convert('RGB'))
+            
             continue
 
         # If music has been stopped, clear matrix
         # TODO: Switch to ambient image displaying mode with
         #       pictures of renaissance paintings
         elif album_art_success == None:
+            logging.info("Unable to find album art.")
             logging.info("Music stopped, clearing matrix...")
             matrix.Clear()
             logging.info("Matrix cleared!")
@@ -73,7 +79,7 @@ if __name__ == '__main__':
     options.chain_length = Config.matrix_chain_length
     options.parallel = Config.matrix_parallel
     options.hardware_mapping = Config.matrix_hardware_mapping
-
+    options.brightness = Config.matrix_brightness
     # Initialise matrix
     matrix = RGBMatrix(options=options)
     logging.info("Matrix initalised!")
