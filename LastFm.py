@@ -5,8 +5,9 @@ import os
 import logging
 import asyncio
 import hashlib
+from ReturnCodes import AlbumCoverCodes
 from pathlib import Path
-from PIL import Image
+
 
 class LastFm:
     default_img_hash = "c903567bed54233fdd17377cdef3a344"
@@ -34,27 +35,28 @@ class LastFm:
             # Get now playing every timeout seconds
             await asyncio.sleep(timeout)
             new_track = self.get_now_playing()
-            while new_track == False:
+
+            while not new_track:
                 new_track = self.get_now_playing()
+
             # If a new song is playing, update current playing
             if new_track != self.current_playing:
                 self.current_playing = new_track
 
-                # If nothing is playing return None
+                # Nothing is playing
                 if self.current_playing is None:
-                    return None
-
-                # Delete album art already saved
-                self.delete_album_art()
+                    return AlbumCoverCodes.NOT_PLAYING
 
                 logging.info(f"Now playing: {str(self.current_playing)}")
 
-                # Download new album art, return False if not downloaded
+                # Download new album art
                 self.current_artwork = self.get_album_art(self.current_playing)
-                if self.current_artwork == False:
-                    return False
 
-                return True
+                # Failed to download album art
+                if self.current_artwork == AlbumCoverCodes.FAILED_DOWNLOAD:
+                    return AlbumCoverCodes.FAILED_DOWNLOAD
+
+                return AlbumCoverCodes.SUCCESS
 
     def delete_album_art(self):
         current_dir = os.getcwd()
@@ -78,37 +80,35 @@ class LastFm:
 
         image_url = track.get_cover_image(3)
         image_file_type = image_url[-4:]
-        image = requests.get(image_url, stream=True)
 
-        if image.status_code == 200:
-            logging.info("Album art succesfully downloaded!")
+        for i in range(5):
+            logging.info(f"Attempt {i}...")
+            image = requests.get(image_url, stream=True)
 
-            # Save file data to file
-            with open(f"{current_folder}/assets/album_art/temp_album{image_file_type}", "wb") as temp_file:
-                shutil.copyfileobj(image.raw, temp_file)
+            if image.status_code == 200:
+                logging.info("Album art succesfully downloaded!")
 
-            image_path = current_folder + f"/assets/album_art/temp_album{image_file_type}"
+                # Save file data to file
+                with open(f"{current_folder}/assets/album_art/temp_album{image_file_type}", "wb") as temp_file:
+                    shutil.copyfileobj(image.raw, temp_file)
 
-            # If image is default last fm image, return false
-            with open(image_path, "rb") as saved_file:
-                md5_hash = hashlib.md5(saved_file.read()).hexdigest()
+                image_path = current_folder + f"/assets/album_art/temp_album{image_file_type}"
 
-            if md5_hash == LastFm.default_img_hash:
-                logging.info(f"Album art for track doesn't exist.")
+                # If image is default last fm image, return false
+                with open(image_path, "rb") as saved_file:
+                    md5_hash = hashlib.md5(saved_file.read()).hexdigest()
 
-                return False
+                if md5_hash == LastFm.default_img_hash:
+                    logging.info(f"Album art for track doesn't exist.")
 
-            return image_path  # Return image path so you can delete the file after use
+                    return AlbumCoverCodes.DEFAULT_IMG
 
-        # If there's an error but less than 5 get attempts, try again
-        elif image.status_code != 200 and get_attempts < 5:
-            logging.info("There was an error downloading album art, trying again..")
-            get_attempts += 1
+                return AlbumCoverCodes.SUCCESS
 
-            self.get_album_art(track)
+            i += 1
 
-        else:
-            logging.info(f"Attempted get of artwork for album {track.get_album} failed. Exceeded five attempts.")
+        logging.info(f"Attempted get of artwork for album {track.get_album} failed. Exceeded five attempts.")
+        return AlbumCoverCodes.FAILED_DOWNLOAD
 
     def get_album(self, artist, song):
         return self.network.get_album(artist, song)
