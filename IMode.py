@@ -10,5 +10,5 @@ class IMode(zope.interface.Interface):
         pass
 
     # Display an image
-    async def display_image(self):
+    async def display_image(self, image_path):
         pass

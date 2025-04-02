@@ -1,7 +1,7 @@
-import enum
+from enum import Enum
 
 
-class AlbumCoverCodes(enum):
+class AlbumCoverCodes(Enum):
     SUCCESS = 0
     NOT_PLAYING = 1
     FAILED_DOWNLOAD = 2

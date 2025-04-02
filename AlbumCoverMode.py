@@ -3,7 +3,7 @@ import ReturnCodes
 import Config
 import os
 import logging
-import IMode
+from IMode import IMode
 from LastFm import LastFm
 from PIL import Image
 
@@ -11,9 +11,11 @@ from PIL import Image
 @zope.interface.implementer(IMode)
 class AlbumCoverMode:
     def __init__(self, matrix):
+        logging.info("Initialising album cover mode...")
         self.matrix = matrix
         self.last_fm = LastFm(os.getenv("LAST_FM_USERNAME"), os.getenv("LAST_FM_PASSWORD"),
                               os.getenv("LAST_FM_API_KEY"), os.getenv("LAST_FM_SS"))
+        logging.info("Album cover mode initialised!")
 
     async def run(self):
         while True:
@@ -52,5 +54,5 @@ class AlbumCoverMode:
     async def stop(self):
         pass
 
-    async def is_playing(self):
+    def is_playing(self):
         return self.last_fm.get_now_playing()

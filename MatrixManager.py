@@ -7,7 +7,9 @@ from rgbmatrix import RGBMatrix, RGBMatrixOptions
 # Do as much work as possible in single methods for matrix
 class MatrixManager:
     def __init__(self, options):
-        self.matrix = RBGMatrix(options)
+        logging.info("Initialising matrix manager...")
+        self.matrix = RGBMatrix(options=options)
+        logging.info("RGB Inited")
         self.album_cover_mode = AlbumCoverMode.AlbumCoverMode(self.matrix)
 
         # add more modes as needed
@@ -23,6 +25,9 @@ class MatrixManager:
 
     async def run(self):
         logging.info("Running loop.")
-        if self.album_cover_mode.is_playing():
-            await self.album_cover_mode.run()
+
+        while True:
+            if self.album_cover_mode.is_playing():
+                logging.info("Song playing")
+                await self.album_cover_mode.run()
 
