@@ -1,8 +1,8 @@
 import zope.interface
-import ReturnCodes
 import Config
 import os
 import logging
+from ReturnCodes import AlbumCoverCodes
 from IMode import IMode
 from LastFm import LastFm
 from PIL import Image
@@ -24,17 +24,15 @@ class AlbumCoverMode:
 
         # Loop until the song stops playing
         while self.running:
-            # No song is playing - stop running album cover mode
-            if not self.last_fm.get_now_playing():
-                logging.info("Music stopped, exiting album cover mode.")
-                self.matrix.clear()
-                self.running = False
-                continue
-
             album_art_success = await self.last_fm.get_now_playing_album_art(Config.album_search_freq)
 
             # If new album art has been downloaded, display it on the matrix
-            if album_art_success:
+            if album_art_success == AlbumCoverCodes.NOT_PLAYING:
+                logging.info("Music stopped, exiting album cover mode")
+                self.running = False
+                self.matrix.Clear()
+
+            elif album_art_success == AlbumCoverCodes.SUCCESS:
                 logging.info("Displaying album art...")
 
                 await self.display_image(self.last_fm.current_artwork)
@@ -42,12 +40,14 @@ class AlbumCoverMode:
                 logging.info("Album art displayed!")
 
             # If new album art has not been downloaded, display placeholder
-            elif not album_art_success:
+            elif album_art_success == AlbumCoverCodes.FAILED_DOWNLOAD:
                 # TODO: Add the backup image if the album art was unable to be found
                 #       could be just the name of the song, for now skip
                 logging.info("Unable to find album art.")
 
                 await self.display_image("assets/doodle_man/picture-not-found-placeholder.jpg")
+
+
 
 
     async def display_image(self, image_path):
