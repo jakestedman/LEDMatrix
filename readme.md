@@ -39,3 +39,4 @@ To launch on startup of Pi (with DietPi installed):
 5. Restart daemon with "sudo systemctl daemon-reload"
 6. Enable service to launch when device boots with "sudo systemctl enable your-service-name.service"
 7. Start service with "sudo systemctl start your-service-name.service"
+8. Give root user permissions to read/write the assets folder with chmod -R 775 assets/
