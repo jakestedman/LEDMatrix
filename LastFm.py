@@ -40,7 +40,7 @@ class LastFm:
 
             while not new_track:
                 new_track = self.get_now_playing()
-
+                logging.info(f"new_track: {new_track}")
             # If a new song is playing, update current playing
             if new_track != self.current_playing:
                 self.current_playing = new_track
@@ -52,11 +52,11 @@ class LastFm:
                 logging.info(f"Now playing: {str(self.current_playing)}")
 
                 # Download new album art
-                self.current_artwork = self.get_album_art(self.current_playing)
+                get_art_success = self.get_album_art(self.current_playing)
 
                 # Failed to download album art
-                if self.current_artwork == AlbumCoverCodes.FAILED_DOWNLOAD:
-                    return AlbumCoverCodes.FAILED_DOWNLOAD
+                if get_art_success != AlbumCoverCodes.SUCCESS:
+                    return get_art_success
 
                 return AlbumCoverCodes.SUCCESS
 
@@ -71,7 +71,8 @@ class LastFm:
     def get_now_playing(self):
         try:
             track = self.username.get_now_playing()
-        except: 
+        except Exception as e: 
+            logging.info(e)
             return False
         return track
 
@@ -104,7 +105,7 @@ class LastFm:
                     logging.info(f"Album art for track doesn't exist.")
 
                     return AlbumCoverCodes.DEFAULT_IMG
-
+                self.current_artwork = image_path
                 return AlbumCoverCodes.SUCCESS
 
             i += 1

@@ -21,7 +21,7 @@ class AlbumCoverMode:
     async def run(self):
         logging.info("Running album cover mode.")
         self.running = True
-
+        await self.display_image("assets/doodle_man/picture-not-found-placeholder.jpg")
         # Loop until the song stops playing
         while self.running:
             logging.info(f"run loop")
@@ -48,7 +48,8 @@ class AlbumCoverMode:
 
                 await self.display_image("assets/doodle_man/picture-not-found-placeholder.jpg")
 
-
+            elif album_art_success == AlbumCoverCodes.DEFAULT_IMG:
+                logging.info("Default image, ignoring")
 
 
     async def display_image(self, image_path):
