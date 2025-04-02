@@ -32,9 +32,11 @@ class LastFm:
     async def get_now_playing_album_art(self, timeout):
         # Ability to turn off get now playing
         while self.running:
+            logging.info(f"get_now_playing_album_art loop")
             # Get now playing every timeout seconds
             await asyncio.sleep(timeout)
             new_track = self.get_now_playing()
+            logging.info(f"new_track: {new_track}")
 
             while not new_track:
                 new_track = self.get_now_playing()

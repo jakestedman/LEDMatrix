@@ -24,6 +24,7 @@ class AlbumCoverMode:
 
         # Loop until the song stops playing
         while self.running:
+            logging.info(f"run loop")
             album_art_success = await self.last_fm.get_now_playing_album_art(Config.album_search_freq)
 
             # If new album art has been downloaded, display it on the matrix
