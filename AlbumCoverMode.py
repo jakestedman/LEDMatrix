@@ -15,10 +15,22 @@ class AlbumCoverMode:
         self.matrix = matrix
         self.last_fm = LastFm(os.getenv("LAST_FM_USERNAME"), os.getenv("LAST_FM_PASSWORD"),
                               os.getenv("LAST_FM_API_KEY"), os.getenv("LAST_FM_SS"))
+        self.running = False
         logging.info("Album cover mode initialised!")
 
     async def run(self):
-        while True:
+        logging.info("Running album cover mode.")
+        self.running = True
+
+        # Loop until the song stops playing
+        while self.running:
+            # No song is playing - stop running album cover mode
+            if not self.last_fm.get_now_playing():
+                logging.info("Music stopped, exiting album cover mode.")
+                self.matrix.clear()
+                self.running = False
+                continue
+
             album_art_success = await self.last_fm.get_now_playing_album_art(Config.album_search_freq)
 
             # If new album art has been downloaded, display it on the matrix
@@ -37,12 +49,6 @@ class AlbumCoverMode:
 
                 await self.display_image("assets/doodle_man/picture-not-found-placeholder.jpg")
 
-            # If music has been stopped, clear matrix
-            elif album_art_success == None:
-                logging.info("Music stopped, exiting album cover mode.")
-                self.matrix.clear()
-
-                break
 
     async def display_image(self, image_path):
         image = Image.open(image_path)
@@ -53,6 +59,3 @@ class AlbumCoverMode:
 
     async def stop(self):
         pass
-
-    def is_playing(self):
-        return self.last_fm.get_now_playing()

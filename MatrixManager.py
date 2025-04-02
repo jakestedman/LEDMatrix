@@ -26,8 +26,7 @@ class MatrixManager:
     async def run(self):
         logging.info("Running loop.")
 
+        # Add/remove modes as is needed
         while True:
-            if self.album_cover_mode.is_playing():
-                logging.info("Song playing")
-                await self.album_cover_mode.run()
+            await self.album_cover_mode.run()
 
