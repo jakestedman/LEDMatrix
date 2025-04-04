@@ -29,7 +29,6 @@ class LastFm:
     def get_live_album_art(self):
         while True:
             new_track = self.is_playing()
-            #print(new_track)
 
             # If a new song is playing, update current playing
             if new_track != self.current_playing:
@@ -63,7 +62,6 @@ class LastFm:
     def is_playing(self):
         try:
             track = self.username.get_now_playing()
-            print(track)
         except Exception as e:
             print(e)
             return False
@@ -78,7 +76,7 @@ class LastFm:
         image_file_type = image_url[-4:]
 
         for i in range(5):
-            print(f"(LastFm::get_album_art) Attempt {i}...")
+            print(f"(LastFm::get_album_art) Attempt {i + 1}...")
             image = requests.get(image_url, stream=True)
 
             if image.status_code == 200:

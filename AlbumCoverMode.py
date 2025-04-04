@@ -61,12 +61,12 @@ class AlbumCoverMode(Mode):
 
                 self.display_image("assets/doodle_man/picture-not-found-placeholder.jpg")
 
-    async def display_image(self, image_path):
+    def display_image(self, image_path):
         image = Image.open(image_path)
         image.thumbnail((self.matrix.width, self.matrix.height), Image.LANCZOS)
         image = image.rotate(180)
 
         self.matrix.SetImage(image.convert('RGB'))
 
-    async def stop(self):
+    def stop(self):
         pass
