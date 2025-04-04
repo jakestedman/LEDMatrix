@@ -11,4 +11,4 @@ matrix_shutdown_delay = 600
 matrix_hardware_mapping = 'regular'  # If you have an Adafruit HAT: 'adafruit-hat'
 
 # Configuration for LastFM
-album_search_freq = 3
+album_search_freq = 1

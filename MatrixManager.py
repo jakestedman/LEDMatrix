@@ -1,32 +1,46 @@
-import logging
-import asyncio
 import AlbumCoverMode
+import threading
 from rgbmatrix import RGBMatrix, RGBMatrixOptions
 
 
 # Do as much work as possible in single methods for matrix
 class MatrixManager:
     def __init__(self, options):
-        logging.info("Initialising matrix manager...")
+        print("(MatrixManager::__init__) Initialising matrix manager...")
         self.matrix = RGBMatrix(options=options)
-        logging.info("RGB Inited")
-        self.album_cover_mode = AlbumCoverMode.AlbumCoverMode(self.matrix)
+        self.album_not_playing_event = threading.Event()
 
-        # add more modes as needed
-        logging.info("Matrix manager initialised!")
+        # Add and initialise modes here
+        album_cover_mode = AlbumCoverMode.AlbumCoverMode("Album cover mode", self.album_not_playing_event)
 
-    def start(self):
-        logging.info("Starting matrix loop...")
-        # Run loop
-        loop = asyncio.get_event_loop()
-        asyncio.ensure_future(self.run())
-        loop.run_forever()
-        loop.close()
+        # Add modes to list
+        self.playing_modes = [album_cover_mode]
 
-    async def run(self):
-        logging.info("Running loop.")
+        # Initialise the standard modes
+        for mode in self.playing_modes:
+            print(f"(MatrixManager::__init__) Initialising {mode.name}...")
+            mode.init(self.matrix)
 
-        # Add/remove modes as is needed
+        print("(MatrixManager::__init__) Display modes initialised!")
+
+        # Initialise the modes that need separate threads
+        matrix_loop_thread = threading.Thread(target=self.run, daemon=True)
+        album_cover_thread = threading.Thread(target=album_cover_mode.run, daemon=True)
+        album_cover_thread.start()
+        matrix_loop_thread.start()
+
+        print("(MatrixManager::__init__) Matrix manager initialised!")
+
+        album_cover_thread.join()
+        matrix_loop_thread.join()
+
+    def run(self):
+        print("(MatrixManager::run) Running loop")
+
+        # This loop will run all the time, except for when the AlbumCoverMode has detected a song playing
+        # in which case the album cover mode will play
         while True:
-            await self.album_cover_mode.run()
+            self.album_not_playing_event.wait()
+
+            # Add playing modes here
 

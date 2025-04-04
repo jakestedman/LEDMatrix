@@ -1,56 +1,65 @@
-import zope.interface
-import Config
 import os
-import logging
+import Config
+from time import sleep
 from ReturnCodes import AlbumCoverCodes
-from IMode import IMode
+from Mode import Mode
 from LastFm import LastFm
 from PIL import Image
 
 
-@zope.interface.implementer(IMode)
-class AlbumCoverMode:
-    def __init__(self, matrix):
-        logging.info("Initialising album cover mode...")
+class AlbumCoverMode(Mode):
+    def __init__(self, name, album_not_playing_event):
+        super().__init__(name)
+        print("(AlbumCoverMode::__init__) Starting album cover mode...")
+
+        self.album_not_playing_event = album_not_playing_event
+        self.last_fm = None
+
+        print("(AlbumCoverMode::__init__) Album cover mode started!")
+
+    def init(self, matrix):
         self.matrix = matrix
+
+        print("(AlbumCoverMode::init) Album cover mode initialised!")
+
+    def run(self):
         self.last_fm = LastFm(os.getenv("LAST_FM_USERNAME"), os.getenv("LAST_FM_PASSWORD"),
                               os.getenv("LAST_FM_API_KEY"), os.getenv("LAST_FM_SS"))
-        self.running = False
-        logging.info("Album cover mode initialised!")
 
-    async def run(self):
-        logging.info("Running album cover mode.")
-        self.running = True
-        await self.display_image("assets/doodle_man/picture-not-found-placeholder.jpg")
+
         # Loop until the song stops playing
-        while self.running:
-            logging.info(f"run loop")
-            album_art_success = await self.last_fm.get_now_playing_album_art(Config.album_search_freq)
+        while True:
+            sleep(Config.album_search_freq)
 
-            # If new album art has been downloaded, display it on the matrix
+            # No song is playing, tell the matrix manager and keep checking
+            if not self.last_fm.is_playing():
+                self.album_not_playing_event.set()
+                continue
+
+            # A song is playing, tell the matrix manager
+            self.album_not_playing_event.clear()
+
+            album_art_success = self.last_fm.get_live_album_art()
+
             if album_art_success == AlbumCoverCodes.NOT_PLAYING:
-                logging.info("Music stopped, exiting album cover mode")
-                self.running = False
+                print("(AlbumCoverMode::run) Exiting album cover mode")
                 self.matrix.Clear()
+                self.album_not_playing_event.set()
 
             elif album_art_success == AlbumCoverCodes.SUCCESS:
-                logging.info("Displaying album art...")
+                print("(AlbumCoverMode::run) Displaying album art...")
 
-                await self.display_image(self.last_fm.current_artwork)
+                self.display_image(self.last_fm.current_artwork)
+                print("(AlbumCoverMode::run) Album art displayed!")
 
-                logging.info("Album art displayed!")
-
-            # If new album art has not been downloaded, display placeholder
             elif album_art_success == AlbumCoverCodes.FAILED_DOWNLOAD:
-                # TODO: Add the backup image if the album art was unable to be found
-                #       could be just the name of the song, for now skip
-                logging.info("Unable to find album art.")
-
-                await self.display_image("assets/doodle_man/picture-not-found-placeholder.jpg")
+                print("(AlbumCoverMode::run) Unable to find album art.")
+                self.display_image("assets/doodle_man/picture-not-found-placeholder.jpg")
 
             elif album_art_success == AlbumCoverCodes.DEFAULT_IMG:
-                logging.info("Default image, ignoring")
+                print("(AlbumCoverMode::run) Default image, ignoring")
 
+                self.display_image("assets/doodle_man/picture-not-found-placeholder.jpg")
 
     async def display_image(self, image_path):
         image = Image.open(image_path)

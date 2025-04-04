@@ -1,10 +1,6 @@
-import asyncio
 import Config
-import logging
 import MatrixManager
 from rgbmatrix import RGBMatrix, RGBMatrixOptions
-from PIL import Image
-from LastFm import LastFm
 from dotenv import load_dotenv
 
 # TODO: Remove all calls to print() when finished, it's slow as fuck
@@ -17,21 +13,12 @@ from dotenv import load_dotenv
 # TODO: try catch around http request for when errors occur
 
 if __name__ == '__main__':
-    logging.basicConfig(filename="led_matrix.log",
-                        filemode='a',
-                        format='%(asctime)s,%(msecs)03d %(name)s %(levelname)s %(message)s',
-                        datefmt='%Y-%m-%d %H:%M:%S',
-                        level=logging.DEBUG)
-
-    logging.info("Starting App...")
-    logging.info("Loading environment variables...")
 
     # Load env variables
     load_dotenv()
-    logging.info("Environment variables loaded!")
+    print("(App::__main__) Environment variables loaded!")
 
-    logging.info("Initialising matrix...")
-    logging.info("Getting matrix configuration.")
+    print("(App::__main__) Loading matrix configuration...")
 
     # Configuration for the matrix
     options = RGBMatrixOptions()
@@ -42,6 +29,7 @@ if __name__ == '__main__':
     options.hardware_mapping = Config.matrix_hardware_mapping
     options.brightness = Config.matrix_brightness
 
+    print("(App::__main__) Matrix configuration loaded!")
+
     # Initialise matrix
     matrix = MatrixManager.MatrixManager(options)
-    matrix.start()
