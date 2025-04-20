@@ -6,3 +6,6 @@ class AlbumCoverCodes(Enum):
     NOT_PLAYING = 1
     FAILED_DOWNLOAD = 2
     DEFAULT_IMG = 3
+
+class LastFmCodes(Enum):
+    ERR = 1

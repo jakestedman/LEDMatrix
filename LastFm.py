@@ -4,7 +4,7 @@ import shutil
 import os
 import hashlib
 import logging
-from ReturnCodes import AlbumCoverCodes
+from ReturnCodes import AlbumCoverCodes, LastFmCodes
 from pathlib import Path
 
 
@@ -24,6 +24,7 @@ class LastFm:
         self.running = running
         self.current_playing = None
         self.current_artwork = None
+        self.is_playing_get_attempts = 0
 
         logging.info("(LastFm::__init__) LastFm started!")
 
@@ -31,17 +32,20 @@ class LastFm:
         while True:
             new_track = self.is_playing()
 
+            if new_track == LastFmCodes.ERR:
+                return AlbumCoverCodes.FAILED_DOWNLOAD
+
             # If a new song is playing, update current playing
             if new_track != self.current_playing:
                 self.current_playing = new_track
 
                 # Nothing is playing
-                if self.current_playing is None:
-                    logging.info("(LastFm::get_now_playing_album_art) Nothing is playing")
+                if self.current_playing is None or self.current_playing == False:
+                    logging.info("(LastFm::get_live_album_art) Nothing is playing")
 
                     return AlbumCoverCodes.NOT_PLAYING
 
-                logging.info(f"(LastFm::get_now_playing_album_art) Now playing - {str(self.current_playing)}")
+                logging.info(f"(LastFm::get_live_album_art) Now playing - {str(self.current_playing)}")
 
                 # Download new album art
                 get_art_success = self.get_album_art(self.current_playing)
@@ -61,11 +65,19 @@ class LastFm:
                 os.remove(file)
 
     def is_playing(self):
+        if self.is_playing_get_attempts > 5:
+            self.is_playing_get_attempts = 0
+            return LastFmCodes.ERR
+
         try:
             track = self.username.get_now_playing()
+            self.is_playing_get_attempts = 0
         except Exception as e:
-            logging.info(e)
-            return False
+            logging.info(f"(LastFm::is_playing) {e}")
+
+            self.is_playing_get_attempts += 1
+            self.is_playing()
+
         return track
 
     def get_album_art(self, track):
