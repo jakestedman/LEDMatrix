@@ -5,6 +5,7 @@ import inspect
 import math
 import time
 import sys
+import logging
 from PIL import Image, ImageDraw
 
 img = Image.open("temp_album.png")
@@ -23,7 +24,7 @@ config = configparser.ConfigParser()
 parsed_configs = config.read('../config.ini')
 
 if len(parsed_configs) == 0:
-    print("no config file found")
+    logging.info("no config file found")
     sys.exit()
 
 config = configparser.ConfigParser()

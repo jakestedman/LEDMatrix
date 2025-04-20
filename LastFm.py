@@ -3,6 +3,7 @@ import requests
 import shutil
 import os
 import hashlib
+import logging
 from ReturnCodes import AlbumCoverCodes
 from pathlib import Path
 
@@ -11,7 +12,7 @@ class LastFm:
     default_img_hash = "c903567bed54233fdd17377cdef3a344"
 
     def __init__(self, username, password, api_key, api_secret, running=True):
-        print("(LastFm::__init__) Starting LastFm...")
+        logging.info("(LastFm::__init__) Starting LastFm...")
         # Initiate a session
         password_hash = pylast.md5(password)
         self.network = pylast.LastFMNetwork(api_key=api_key,
@@ -24,7 +25,7 @@ class LastFm:
         self.current_playing = None
         self.current_artwork = None
 
-        print("(LastFm::__init__) LastFm started!")
+        logging.info("(LastFm::__init__) LastFm started!")
 
     def get_live_album_art(self):
         while True:
@@ -36,11 +37,11 @@ class LastFm:
 
                 # Nothing is playing
                 if self.current_playing is None:
-                    print("(LastFm::get_now_playing_album_art) Nothing is playing")
+                    logging.info("(LastFm::get_now_playing_album_art) Nothing is playing")
 
                     return AlbumCoverCodes.NOT_PLAYING
 
-                print(f"(LastFm::get_now_playing_album_art) Now playing - {str(self.current_playing)}")
+                logging.info(f"(LastFm::get_now_playing_album_art) Now playing - {str(self.current_playing)}")
 
                 # Download new album art
                 get_art_success = self.get_album_art(self.current_playing)
@@ -63,12 +64,12 @@ class LastFm:
         try:
             track = self.username.get_now_playing()
         except Exception as e:
-            print(e)
+            logging.info(e)
             return False
         return track
 
     def get_album_art(self, track):
-        print(f"(LastFm::get_album_art) Getting album art for song {track.get_album()}")
+        logging.info(f"(LastFm::get_album_art) Getting album art for song {track.get_album()}")
         get_attempts = 0
         current_folder = os.getcwd()  # Get current folder to create image path later
 
@@ -76,11 +77,11 @@ class LastFm:
         image_file_type = image_url[-4:]
 
         for i in range(5):
-            print(f"(LastFm::get_album_art) Attempt {i + 1}...")
+            logging.info(f"(LastFm::get_album_art) Attempt {i + 1}...")
             image = requests.get(image_url, stream=True)
 
             if image.status_code == 200:
-                print("(LastFm::get_album_art) Album art succesfully downloaded!")
+                logging.info("(LastFm::get_album_art) Album art succesfully downloaded!")
 
                 # Save file data to file
                 with open(f"{current_folder}/assets/album_art/temp_album{image_file_type}", "wb") as temp_file:
@@ -100,7 +101,7 @@ class LastFm:
 
             i += 1
 
-        print(f"(LastFm::get_album_art) Attempted get of artwork for album {track.get_album} failed. Exceeded five attempts.")
+        logging.info(f"(LastFm::get_album_art) Attempted get of artwork for album {track.get_album} failed. Exceeded five attempts.")
         self.current_artwork = None
         return AlbumCoverCodes.FAILED_DOWNLOAD
 

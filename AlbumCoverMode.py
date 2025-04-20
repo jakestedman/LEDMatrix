@@ -1,5 +1,6 @@
 import os
 import Config
+import logging
 from time import sleep
 from ReturnCodes import AlbumCoverCodes
 from Mode import Mode
@@ -10,17 +11,17 @@ from PIL import Image
 class AlbumCoverMode(Mode):
     def __init__(self, name, album_not_playing_event):
         super().__init__(name)
-        print("(AlbumCoverMode::__init__) Starting album cover mode...")
+        logging.info("(AlbumCoverMode::__init__) Starting album cover mode...")
 
         self.album_not_playing_event = album_not_playing_event
         self.last_fm = None
 
-        print("(AlbumCoverMode::__init__) Album cover mode started!")
+        logging.info("(AlbumCoverMode::__init__) Album cover mode started!")
 
     def init(self, matrix):
         self.matrix = matrix
 
-        print("(AlbumCoverMode::init) Album cover mode initialised!")
+        logging.info("(AlbumCoverMode::init) Album cover mode initialised!")
 
     def run(self):
         self.last_fm = LastFm(os.getenv("LAST_FM_USERNAME"), os.getenv("LAST_FM_PASSWORD"),
@@ -42,22 +43,22 @@ class AlbumCoverMode(Mode):
             album_art_success = self.last_fm.get_live_album_art()
 
             if album_art_success == AlbumCoverCodes.NOT_PLAYING:
-                print("(AlbumCoverMode::run) Exiting album cover mode")
+                logging.info("(AlbumCoverMode::run) Exiting album cover mode")
                 self.matrix.Clear()
                 self.album_not_playing_event.set()
 
             elif album_art_success == AlbumCoverCodes.SUCCESS:
-                print("(AlbumCoverMode::run) Displaying album art...")
+                logging.info("(AlbumCoverMode::run) Displaying album art...")
 
                 self.display_image(self.last_fm.current_artwork)
-                print("(AlbumCoverMode::run) Album art displayed!")
+                logging.info("(AlbumCoverMode::run) Album art displayed!")
 
             elif album_art_success == AlbumCoverCodes.FAILED_DOWNLOAD:
-                print("(AlbumCoverMode::run) Unable to find album art.")
+                logging.info("(AlbumCoverMode::run) Unable to find album art.")
                 self.display_image("assets/doodle_man/picture-not-found-placeholder.jpg")
 
             elif album_art_success == AlbumCoverCodes.DEFAULT_IMG:
-                print("(AlbumCoverMode::run) Default image, ignoring")
+                logging.info("(AlbumCoverMode::run) Default image, ignoring")
 
                 self.display_image("assets/doodle_man/picture-not-found-placeholder.jpg")
 

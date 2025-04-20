@@ -1,5 +1,6 @@
 import Config
 import MatrixManager
+import logging
 from rgbmatrix import RGBMatrix, RGBMatrixOptions
 from dotenv import load_dotenv
 
@@ -13,12 +14,12 @@ from dotenv import load_dotenv
 # TODO: try catch around http request for when errors occur
 
 if __name__ == '__main__':
-
+    logging.basicConfig(filename="log.txt", encoding="utf-8", format='%(levelname)s:%(message)s', level=logging.INFO)
     # Load env variables
     load_dotenv()
-    print("(App::__main__) Environment variables loaded!")
+    logging.info("(App::__main__) Environment variables loaded!")
 
-    print("(App::__main__) Loading matrix configuration...")
+    logging.info("(App::__main__) Loading matrix configuration...")
 
     # Configuration for the matrix
     options = RGBMatrixOptions()
@@ -29,7 +30,7 @@ if __name__ == '__main__':
     options.hardware_mapping = Config.matrix_hardware_mapping
     options.brightness = Config.matrix_brightness
 
-    print("(App::__main__) Matrix configuration loaded!")
+    logging.info("(App::__main__) Matrix configuration loaded!")
 
     # Initialise matrix
     matrix = MatrixManager.MatrixManager(options)
