@@ -1,3 +1,4 @@
+import os
 import Config
 import MatrixManager
 import logging
@@ -14,7 +15,13 @@ from dotenv import load_dotenv
 # TODO: try catch around http request for when errors occur
 
 if __name__ == '__main__':
-    logging.basicConfig(filename="log.txt", encoding="utf-8", format='%(levelname)s:%(message)s', level=logging.INFO)
+    log_file_name = "log.txt"
+
+    # Remove the log file if it exists to avoid it growing in size indefinitely
+    if os.path.exists(log_file_name):
+        os.remove(log_file_name)
+
+    logging.basicConfig(filename=log_file_name, encoding="utf-8", format='%(levelname)s:%(message)s', level=logging.DEBUG)
     # Load env variables
     load_dotenv()
     logging.info("(App::__main__) Environment variables loaded!")
