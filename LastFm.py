@@ -65,31 +65,31 @@ class LastFm:
                 os.remove(file)
 
     def is_playing(self):
-        if self.is_playing_get_attempts > 5:
-            self.is_playing_get_attempts = 0
-            return LastFmCodes.ERR
+        # Try 5 times to get the currently playing song
+        for attempt in range(5):
+            logging.info(f"(LastFm::is_playing) Attempt {attempt + 1}")
+            try:
+                track = self.username.get_now_playing()
+                logging.info("(LastFm::is_playing) Successfully fetched now playing!")
+            except Exception as e:
+                logging.error(f"(LastFm::is_playing) Failed to get currently playing song: {e}")
 
-        try:
-            track = self.username.get_now_playing()
-            self.is_playing_get_attempts = 0
-        except Exception as e:
-            logging.info(f"(LastFm::is_playing) {e}")
-
-            self.is_playing_get_attempts += 1
-            self.is_playing()
+                track = LastFmCodes.ERR
+                continue
+            else:
+                break
 
         return track
 
     def get_album_art(self, track):
         logging.info(f"(LastFm::get_album_art) Getting album art for song {track.get_album()}")
-        get_attempts = 0
         current_folder = os.getcwd()  # Get current folder to create image path later
 
         image_url = track.get_cover_image(3)
         image_file_type = image_url[-4:]
 
-        for i in range(5):
-            logging.info(f"(LastFm::get_album_art) Attempt {i + 1}...")
+        for attempt in range(5):
+            logging.info(f"(LastFm::get_album_art) Attempt {attempt + 1}...")
             image = requests.get(image_url, stream=True)
 
             if image.status_code == 200:
@@ -110,8 +110,6 @@ class LastFm:
 
                 self.current_artwork = image_path
                 return AlbumCoverCodes.SUCCESS
-
-            i += 1
 
         logging.info(f"(LastFm::get_album_art) Attempted get of artwork for album {track.get_album} failed. Exceeded five attempts.")
         self.current_artwork = None
